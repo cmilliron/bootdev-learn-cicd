@@ -25,12 +25,6 @@ jobs:
       - name: Build Notely
         run: scripts/buildprod.sh
 
-      - name: Authenticate with GCP
-        run: gcloud iam workload-identity-pools providers describe "my-repo" \
-          --location="global" \
-          --workload-identity-pool="github" \
-          --format="value(name)"
-
       - id: "auth"
         uses: "google-github-actions/auth@v2"
         with:
