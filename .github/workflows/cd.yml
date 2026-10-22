@@ -9,6 +9,10 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: "read"
+      id-token: "write"
+
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -20,3 +24,24 @@ jobs:
 
       - name: Build Notely
         run: scripts/buildprod.sh
+
+      - name: Authenticate with GCP
+        run: gcloud iam workload-identity-pools providers describe "my-repo" \
+          --location="global" \
+          --workload-identity-pool="github" \
+          --format="value(name)"
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: "projects/1025113964941/locations/global/workloadIdentityPools/github/providers/my-repo"
+          service_account: "cloud-run-deployer@notely-bootdev-512218.iam.gserviceaccount.com"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v3"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: "Build Docker Image"
+        run: gcloud builds submit --tag us-central1-docker.pkg.dev/notely-bootdev-512218/notely-ar-repo/notely:latest .
